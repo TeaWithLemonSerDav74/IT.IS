@@ -11,25 +11,8 @@ def connect(filename) -> sqlite3.Connection:
 
 def initialize(db) -> None:
     cur = db.cursor()
-    queries = [
-        "CREATE TABLE IF NOT EXISTS action_log("
-        "ip TEXT,"
-        "time TEXT,"
-        "action TEXT);",
-
-        "CREATE TABLE IF NOT EXISTS ip_info("
-        "ip TEXT,"
-        "country TEXT);",
-
-        "CREATE TABLE IF NOT EXISTS carts("
-        "id INTEGER,"
-        "items TEXT,"
-        "creation_date TEXT,"
-        "payment_date TEXT)"
-    ]
-
-    for query in queries:
-        cur.execute(query)
+    with open("schema.sql", 'rt') as f:
+        cur.executescript(f.read())
 
     db.commit()
 
