@@ -39,19 +39,38 @@ def parse(logfile, database) -> None:
     last_actions = dict()
     carts = dict()
 
+    hits_per_hour = dict()
+    hits_per_country = dict()
+
     for line in logfile:
         # extracting general data
         date, time, key, _, ip, action = line.split()[2:]
-        datetime = date + ' ' + time
+        date_time = date + ' ' + time
         action = parse_action(action)
 
         # fetching ip location is pretty slow, so we'd better do that once per ip
-        if not db.has_ip_data(database, ip):
-            save_ip_data(georeader, database, ip)
+        country_data = db.get_ip_data(database, ip)
+        if country_data:
+            country = country_data[1]
+        else:
+            country = save_ip_data(georeader, database, ip)
 
         # saving record to database
         action_string = ' '.join([str(x) for x in action])
-        db.insert_log(database, ip, datetime, action_string)
+        db.insert_log(database, ip, date_time, action_string)
+
+        # page hits stuff here
+        start_hour = datetime.fromisoformat(date_time).replace(minute=0, second=0).isoformat(sep=' ')
+        if start_hour in hits_per_hour:
+            hits_per_hour[start_hour] += 1
+        else:
+            hits_per_hour[start_hour] = 1
+
+        if country in hits_per_country:
+            hits_per_country[country] += 1
+        else:
+            hits_per_country[country] = 1
+
 
         # handling cart stuff
         if action[0] == "CART":
@@ -61,7 +80,7 @@ def parse(logfile, database) -> None:
             cart_id = action[1]
             if cart_id not in carts:
                 # create new empty cart
-                carts[cart_id] = Cart(datetime)
+                carts[cart_id] = Cart(date_time)
 
             # we stored page address -- now is a good time to extract an item from it
             item = previous_action[1].split('/')[-2]
@@ -70,23 +89,26 @@ def parse(logfile, database) -> None:
 
         if action[0] == "PAID":
             cart_id = action[1]
-            carts[cart_id].payment_date = datetime
+            carts[cart_id].payment_date = date_time
 
         last_actions[ip] = action
 
-    db.save_cart_data(database, carts)
+    db.insert_carts_data(database, carts)
+    db.insert_hits_data(database, per_country=hits_per_country, per_hour=hits_per_hour)
+
     georeader.close()
 
 
-def save_ip_data(georeader, database, ip) -> None:
+def save_ip_data(georeader, database, ip) -> str:
     try:
         geodata = georeader.get(ip)
 
         # some entries do not have "country" field
         country = (geodata["country"] or geodata["registered_country"])["names"]["ru"]
     except (KeyError, TypeError, ValueError):
-        country = "Unknown"
+        country = "Нет данных"
     db.insert_ip_data(database, ip, country)
+    return country
 
 
 # extract useful data from page address

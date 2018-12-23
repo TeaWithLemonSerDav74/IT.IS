@@ -27,13 +27,13 @@ def insert_ip_data(db, ip, ip_country) -> None:
     cur.execute("INSERT INTO ip_info VALUES (?,?)", (ip, ip_country))
 
 
-def has_ip_data(db, ip) -> tuple:
+def get_ip_data(db, ip) -> tuple:
     cur = db.cursor()
     cur.execute("SELECT * FROM ip_info WHERE ip=?", (ip,))
     return cur.fetchone()
 
 
-def save_cart_data(db, carts) -> None:
+def insert_carts_data(db, carts) -> None:
     cur = db.cursor()
     for cart_id, cart in carts.items():
         cur.execute("INSERT INTO carts VALUES (?,?,?,?)", (
@@ -41,6 +41,12 @@ def save_cart_data(db, carts) -> None:
             ','.join(cart.goods),
             cart.creation_date,
             cart.payment_date or MAX_DATE))
+
+
+def insert_hits_data(db, per_country, per_hour):
+    cur = db.cursor()
+    cur.executemany("INSERT INTO hits_per_country VALUES (?,?)", list(per_country.items()))
+    cur.executemany("INSERT INTO hits_per_hour VALUES (?,?)", list(per_hour.items()))
 
 
 def finish(db):
