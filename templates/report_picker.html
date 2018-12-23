@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчёт</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename="styles.css") }}">
+</head>
+<body>
+    <div class="content">
+        <h1>Выберите отчёт</h1>
+        <p><a href="{{ url_for('report_load') }}">Нагрузка на сервер</a></p>
+        <p><a href="{{ url_for('report_hits_per_country', limit=10) }}">Количество просмотров по странам</a></p>
+        <p><a href="{{ url_for('report_unpaid_carts') }}">Неоплаченные корзины</a></p>
+    </div>
+</body>
+</html>

@@ -1,25 +1,40 @@
 # IT.IS
 
-Solution for a test task.
+## Парсер логов
 
-## Log parser
+### Требования
 
-### Requirements
-
-Python 3.7+ with following additional packages:
+Python 3.7+ и перечисленные ниже модули:
 - maxminddb-geolite2
 
-### Usage
+### Использование
 
-Go to `log_parser` folder, then
+В папке `log_parser` выполните команду
 ```bash
-python3 parser.py [log file] [database file]
+python3 parser.py [logfile] [database file]
 ```
-will parse _log file_, create _database file_ if it doesn't exist and fill it with data.
-Defaults:
- - _log file_ is `logs.txt`
- - _database file_ is `database.sqlite`
+Скрипт откроет на чтение _logfile_, создаст базу данных _database file_ и заполнит её данными.
+Параметры по умолчанию:
+- _logfile_ = `logs.txt`
+- _database file_ = `database.sqlite`
 
-## Web interface
+## Веб-интерфейс
 
-Not implemented yet.
+### Требования
+
+Python 3.7+ и перечисленные ниже модули:
+- Flask
+
+### Использование
+
+Для начала откройте config.py в текстовом редакторе и измените путь к базе данных, сгенерированной парсером.
+```python
+import os
+DATABASE = os.path.join('папка', 'другая папка', 'база.sqlite')
+```
+
+Чтобы запустить тестовый сервер Flask, используйте в корневой папке проекта команду:
+```bash
+python3 -m flask run
+```
+Интерфейс для генерации отчётов будет доступен по http://127.0.0.1:5000

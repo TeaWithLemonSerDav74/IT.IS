@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчёт</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename="styles.css") }}">
+    {% if report in ["unpaid-carts","load"] %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    {% endif %}
+    {% if report == "load" %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.js"></script>
+    {% endif %}
+</head>
+<body>
+    <div class="content">
+        {% if report == "hits-per-country" %}
+            <h1>Отчёт: количество просмотров по странам</h1>
+
+            <p style="text-align: center">Отобразить:&nbsp;
+            {% for i,j in [(5, "5"), (10, "10"), (20, "20"), (1000, "все")] %}
+                {% if i == limit %}
+                    {{ j }}&nbsp;
+                {% else %}
+                    <a href="{{ url_for('report_hits_per_country', limit=i) }}">{{ j }}</a>&nbsp;
+                {% endif %}
+            {% endfor %}
+            </p>
+
+            <table style="border: none; width: 80%; margin: 0 auto">
+            {% for country, hits in data %}
+                <tr>
+                    {# <td style="text-align: right"><b>{{ loop.index }}</b></td> #}
+                    <td style="text-align: right">{{ country }}:</td>
+                    <td>{{ hits }} просмотров</td></tr>
+            {% endfor %}
+            </table>
+        {% elif report == "unpaid-carts" %}
+            <h1>Отчёт: количество неоплаченных корзин</h1>
+            <p>Период времени:</p>
+            <form action="{{ url_for('report_unpaid_carts') }}" method="POST"><p>с <input title="Start date" name="start-date" class="date-input"> по
+                <input title="End date" name="end-date" class="date-input"></p>
+                <p><input type="submit" value="Отправить запрос"></p>
+            </form>
+            <script>
+            flatpickr(".date-input", {enableTime: true, dateFormat: "Y-m-d H:i:S",})
+            </script>
+            {% if data is defined %}
+                <p style="font-size-adjust: +1">Неоплаченных корзин c <br>{{ start_date }}<br>по<br>{{ end_date }}:</p><p style="font-size-adjust: +2">{{ data }}</p>
+            {% endif %}
+        {% elif report == "load" %}
+            <h1>Отчёт: нагрузка на сервер</h1>
+            <p>Период времени:</p>
+            <form action="{{ url_for('report_load') }}" method="POST"><p>с <input title="Start date" name="start-date" class="date-input"> по
+                <input title="End date" name="end-date" class="date-input"></p>
+                <p><input type="submit" value="Отправить запрос"></p>
+            </form>
+            <script>
+            flatpickr(".date-input", {enableTime: true, dateFormat: "Y-m-d H:i:S",})
+            </script>
+            {% if data %}
+                <canvas id="load_chart" height="300px" width="400px"></canvas>
+                <script>
+                var ctx = document.getElementById("load_chart").getContext("2d");
+                var data = {{ data|tojson|safe }};
+                var load_chart = new Chart(ctx, data);
+                </script>
+            {% endif %}
+        {% elif report == "error" %}
+            <h1>Ошибка</h1>
+            {% if message %}
+                <p>{{ message }}</p>
+            {% else %}
+                <p>Нет дополнительной информации.</p>
+            {% endif %}
+        {% else %}
+            <h1>Report {{ report }} is not implemented</h1>
+        {% endif %}
+    </div>
+    <p><a href="{{ url_for('app_main') }}">К выбору отчётов</a></p>
+</body>
+</html>
